@@ -33,7 +33,9 @@ COPY generator.py generator.py
 
 CMD ["python3", "generator.py"]
 
-# docker built -t generator .
-# docker run -it generator
+# docker build -t generator .
+# docker tag generator hostop/oracle-dummy-generator
+# docker run -it hostop/oracle-dummy-generator
+# docker push hostop/oracle-dummy-generator
 
 

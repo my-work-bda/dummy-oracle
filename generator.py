@@ -49,7 +49,7 @@ def insert_rows(df, connection, schema_name, table_name):
 
 def main():
     # hostname, port, sid, username, password = load_env_variables()
-    hostname="midtown-32"
+    hostname="10.1.111.32"
     sid="ORCLCDB"
     port="1521"
     # service_name=ORCLPDB1
