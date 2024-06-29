@@ -1,41 +1,37 @@
-FROM ubuntu:22.04
-
-USER root
+FROM python:3.10-alpine
 
 # Install dependencies
-RUN apt-get update && apt-get install -y \
-    python3 \
-    python3-pip \
+RUN apk update && apk add --no-cache \
     unzip \
-    libaio1 
+    libaio \
+    g++ \
+    make \
+    libffi-dev \
+    openssl-dev
 
 RUN mkdir -p /opt/oracle
 WORKDIR /opt/oracle
 
 COPY instantclient-basic-linux.x64-21.14.0.0.0dbru.zip /opt/oracle
 
-RUN unzip instantclient-basic-linux.x64-21.14.0.0.0dbru.zip
+# Unzip the Oracle Instant Client and clean up in a single RUN to reduce layer size
+RUN unzip instantclient-basic-linux.x64-21.14.0.0.0dbru.zip && \
+    rm instantclient-basic-linux.x64-21.14.0.0.0dbru.zip
 
-RUN export LD_LIBRARY_PATH=/opt/oracle/instantclient_21_1:$LD_LIBRARY_PATH
+# Set environment variable for Oracle Instant Client
+ENV LD_LIBRARY_PATH=/opt/oracle/instantclient_21_14:$LD_LIBRARY_PATH
 
-RUN sh -c "echo /opt/oracle/instantclient_21_14 > /etc/ld.so.conf.d/oracle-instantclient.conf"
-RUN ldconfig
+# Configure dynamic linker run-time bindings
+RUN echo "/opt/oracle/instantclient_21_14" > /etc/ld.so.conf.d/oracle-instantclient.conf && \
+    ldconfig
 
+# Copy and install Python dependencies
 COPY requirements.txt requirements.txt
-RUN pip install -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
+# Copy application files
 COPY transaction_data.parquet transaction_data.parquet
-
-RUN pip install pyarrow
-
-
 COPY generator.py generator.py
 
+# Set the command to run the application
 CMD ["python3", "generator.py"]
-
-# docker build -t generator .
-# docker tag generator hostop/oracle-dummy-generator
-# docker run -it hostop/oracle-dummy-generator
-# docker push hostop/oracle-dummy-generator
-
-
